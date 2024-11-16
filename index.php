@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login'])) {
     $user = login_user($email, $password);
 
     if ($user) {
-        echo "Welcome, " . htmlspecialchars($user['name']) . "!";
+    header('Location: admin/dashboard.php');
     } else {
         echo "<div class='alert alert-danger'>Invalid email or password.</div>";
     }
