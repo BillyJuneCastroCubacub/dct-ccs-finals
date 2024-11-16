@@ -1,3 +1,20 @@
+<?php
+require 'functions.php';
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login'])) {
+    $email = sanitize_input($_POST['email']);
+    $password = sanitize_input($_POST['password']);
+
+    $user = login_user($email, $password);
+
+    if ($user) {
+        echo "Welcome, " . htmlspecialchars($user['name']) . "!";
+    } else {
+        echo "<div class='alert alert-danger'>Invalid email or password.</div>";
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
