@@ -1,9 +1,9 @@
-<?php include('partials/header.php'); ?>
+<?php include('../partials/header.php'); ?>
 
 <div class="container-fluid">
     <div class="row">
         <!-- Sidebar Section -->
-        <?php include('partials/side-bar.php'); ?>
+        <?php include('../partials/side-bar.php'); ?>
         <div class="col-lg-10 col-md-9">
             <div class="container mt-5">
                 <h2>Add a New Subject</h2>
