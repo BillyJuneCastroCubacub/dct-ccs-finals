@@ -58,4 +58,20 @@ function validateSubjectData($subject_data) {
     return $errors;
 }
 
+function validateStudentData($student_data) {
+    $errors = [];
+    if (empty($student_data['student_id'])) {
+        $errors[] = "Student ID is required.";
+    }
+    if (empty($student_data['first_name'])) {
+        $errors[] = "First Name is required.";
+    }
+
+    if (empty($student_data['last_name'])) {
+        $errors[] = "Last Name is required.";
+    }
+    return $errors;
+}
+
+
 ?>
