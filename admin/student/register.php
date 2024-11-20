@@ -4,8 +4,6 @@
     <div class="row">
         <!-- Sidebar Section -->
             <?php include('../partials/side-bar.php'); ?>
-   
-
         <!-- Main Content Section -->
         <div class="col-lg-10 col-md-9 mt-5">
             <h2>Register a New Student</h2>
