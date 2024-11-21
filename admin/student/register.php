@@ -1,10 +1,30 @@
-<?php include('../partials/header.php'); ?>
+<?php
+    session_start();
+    require('../../functions.php');
+    include('../partials/header.php');
+
+    $errors = [];
+    $student_data = [];
+
+    if (!isset($_SESSION['student_data'])) {
+        $_SESSION['student_data'] = [];
+    }
+
+    $student_data = [
+        'student_id' => $_POST['student_id'],
+        'first_name' => $_POST['first_name'],
+        'last_name' => $_POST['last_name'],
+    ];
+
+    $errors = validateData($student_data);
+
+  
+
+?>
 
 <div class="container-fluid">
     <div class="row">
-        <!-- Sidebar Section -->
             <?php include('../partials/side-bar.php'); ?>
-        <!-- Main Content Section -->
         <div class="col-lg-10 col-md-9 mt-5">
             <h2>Register a New Student</h2>
             <br>
@@ -45,19 +65,19 @@
                     </tr>
                 </thead>
                 <tbody>
-                            <tr>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td>
-                                    <a href="#" class="btn btn-info btn-sm">Edit</a>
-                                    <a href="#" class="btn btn-danger btn-sm">Delete</a>
-                                    <a href="#" class="btn btn-secondary btn-sm">Attach Subject</a>
-                                </td>
-                            </tr>
-                        <tr>
-                            <td colspan="4" class="text-center">No student records found.</td>
-                        </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td>
+                            <a href="#" class="btn btn-info btn-sm">Edit</a>
+                            <a href="#" class="btn btn-danger btn-sm">Delete</a>
+                            <a href="#" class="btn btn-secondary btn-sm">Attach Subject</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="text-center">No student records found.</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
