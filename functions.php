@@ -357,6 +357,218 @@ function login_user($email, $password) {
         mysqli_close($conn);
         return false; 
     }
+
+
+    function assignSubjectToStudent($studentId, $subjectId) {
+        $conn = db_connect();
+        $errors = [];
+    
+        // Input validation
+        if (!$studentId) {
+            $errors[] = "Student ID is required.";
+        }
+        if (!$subjectId) {
+            $errors[] = "Subject ID is required.";
+        }
+    
+        // Check if student and subject exist
+        $student = getSelectedStudentById($studentId);
+        $subject = getSelectedSubjectById($subjectId);
+    
+        if (!$student) {
+            $errors[] = "No student found with the provided ID.";
+        }
+        if (!$subject) {
+            $errors[] = "No subject found with the provided ID.";
+        }
+    
+        // Handle validation errors
+        if (!empty($errors)) {
+            echo displayErrors($errors);
+            return false;
+        }
+    
+        // Check if the subject is already assigned to the student
+        $queryCheck = "SELECT * FROM students_subjects WHERE student_id = ? AND subject_id = ?";
+        $stmtCheck = mysqli_prepare($conn, $queryCheck);
+    
+        if ($stmtCheck) {
+            mysqli_stmt_bind_param($stmtCheck, "ii", $studentId, $subjectId);
+            mysqli_stmt_execute($stmtCheck);
+            mysqli_stmt_store_result($stmtCheck);
+    
+            if (mysqli_stmt_num_rows($stmtCheck) > 0) {
+                mysqli_stmt_close($stmtCheck);
+                mysqli_close($conn);
+                echo displayErrors(["This subject is already assigned to the student."]);
+                return false;
+            }
+            mysqli_stmt_close($stmtCheck);
+        } else {
+            echo "Error checking existing assignments: " . mysqli_error($conn);
+            mysqli_close($conn);
+            return false;
+        }
+    
+        // Assign the subject to the student
+        $queryInsert = "INSERT INTO students_subjects (student_id, subject_id, grade) VALUES (?, ?, ?)";
+        $stmtInsert = mysqli_prepare($conn, $queryInsert);
+    
+        if ($stmtInsert) {
+            $defaultGrade = 0; // Set default grade value
+            mysqli_stmt_bind_param($stmtInsert, "iis", $studentId, $subjectId, $defaultGrade);
+    
+            if (mysqli_stmt_execute($stmtInsert)) {
+                mysqli_stmt_close($stmtInsert);
+                mysqli_close($conn);
+                return true; // Assignment successful
+            } else {
+                echo "Error assigning subject: " . mysqli_error($conn);
+            }
+            mysqli_stmt_close($stmtInsert);
+        } else {
+            echo "Error preparing assignment query: " . mysqli_error($conn);
+        }
+    
+        // Close the connection in case of failure
+        mysqli_close($conn);
+        return false;
+    }
+
+
+    function fetchSubjectIdByCode($subjectCode) {
+        $conn = db_connect(); // Establish database connection
+    
+        // Prepare the SQL query to fetch subject ID using the subject code
+        $query = "SELECT id FROM subjects WHERE subject_code = ?";
+        $stmt = mysqli_prepare($conn, $query);
+    
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "s", $subjectCode);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+    
+            // Fetch and return the subject ID if found
+            if ($result && $row = mysqli_fetch_assoc($result)) {
+                mysqli_stmt_close($stmt);
+                mysqli_close($conn);
+                return $row['id'];
+            }
+    
+            mysqli_stmt_close($stmt);
+        }
+    
+        mysqli_close($conn);
+        return false; // Return false if not found or if an error occurs
+    }
+
+    function fetchSubjectDetailsByCode($subjectCode) {
+        $conn = db_connect(); // Establish database connection
+        $subject = null;
+    
+        // Prepare the SQL query to fetch all subject details using the subject code
+        $query = "SELECT * FROM subjects WHERE subject_code = ?";
+        $stmt = mysqli_prepare($conn, $query);
+    
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "s", $subjectCode);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+    
+            // Fetch and store subject details if found
+            if ($result) {
+                $subject = mysqli_fetch_assoc($result);
+            }
+    
+            mysqli_stmt_close($stmt);
+        }
+    
+        mysqli_close($conn);
+        return $subject; // Return the subject details or null if not found
+    }
+    
+    function getAttachedSubjectsByStudentId($student_id) {
+        $conn = db_connect();
+        $subjects = [];
+        
+      
+        $sql = "SELECT s.subject_code, s.subject_name, ss.grade
+                FROM subjects s
+                INNER JOIN students_subjects ss ON s.id = ss.subject_id
+                WHERE ss.student_id = ?";
+        
+        $stmt = mysqli_prepare($conn, $sql);
+        
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "i", $student_id);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            
+            while ($row = mysqli_fetch_assoc($result)) {
+                $subjects[] = $row;
+            }
+    
+            mysqli_stmt_close($stmt);
+        }
+    
+        mysqli_close($conn);
+        return $subjects;
+    }
+
+    function fetchAllSubjects() {
+        $conn = db_connect(); // Establish a database connection
+        $subjects = [];
+        
+        // Query to fetch all subjects
+        $sql = "SELECT * FROM subjects";
+        $result = mysqli_query($conn, $sql);
+        
+        if ($result) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $subjects[] = $row;
+            }
+        } else {
+            // Handle query errors
+            echo "Error fetching subjects: " . mysqli_error($conn);
+        }
+        
+        mysqli_close($conn);
+        return $subjects;
+    }
+    
+    function getSelectedSubjectById($subject_id) {
+        $conn = db_connect(); // Establish a database connection
+    
+        // SQL query to fetch the subject details by ID
+        $sql = "SELECT * FROM subjects WHERE id = ?";
+        $stmt = mysqli_prepare($conn, $sql);
+    
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "i", $subject_id);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+    
+            if ($result && mysqli_num_rows($result) > 0) {
+                $subject = mysqli_fetch_assoc($result);
+                mysqli_stmt_close($stmt);
+                mysqli_close($conn);
+                return $subject; // Return the subject details
+            } else {
+                mysqli_stmt_close($stmt);
+                mysqli_close($conn);
+                return null; // No subject found
+            }
+        } else {
+            echo "Error preparing statement: " . mysqli_error($conn);
+        }
+    
+        mysqli_close($conn);
+        return null; // Return null in case of an error
+    }
+    
+    
+    
+    
     
 
 ?>
