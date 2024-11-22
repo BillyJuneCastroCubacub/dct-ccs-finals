@@ -115,6 +115,7 @@ mysqli_close($conn);
                         </tr>
                     <?php endif; ?>
                 </tbody>
+
             </table>
         </div>
     </div>
