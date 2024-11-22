@@ -226,7 +226,7 @@ function fetchStudentById($student_id) {
     }
 
     function deleteSubjectByCode($subject_code) {
-        $conn = con(); 
+        $conn = db_connect(); 
         $sql = "DELETE FROM subjects WHERE subject_code = ?";
         $stmt = mysqli_prepare($conn, $sql);
     
@@ -243,5 +243,99 @@ function fetchStudentById($student_id) {
             return false;
         }
     }
+
+    function addSubjectData($subject_data) {
+        $conn = db_connect(); 
+        
+        $errors = validateSubjectData($subject_data);
+        
+        $sql_check = "SELECT * FROM subjects WHERE subject_code = ?";
+        $stmt_check = mysqli_prepare($conn, $sql_check);
+        mysqli_stmt_bind_param($stmt_check, "s", $subject_data['subject_code']);
+        mysqli_stmt_execute($stmt_check);
+        $result_check = mysqli_stmt_get_result($stmt_check);
+    
+        if (mysqli_num_rows($result_check) > 0) {
+            $errors[] = "Duplicate Subject";
+        }
+        mysqli_stmt_close($stmt_check);
+    
+    
+        $sql_check_name = "SELECT * FROM subjects WHERE subject_name = ?";
+        $stmt_check_name = mysqli_prepare($conn, $sql_check_name);
+        mysqli_stmt_bind_param($stmt_check_name, "s", $subject_data['subject_name']);
+        mysqli_stmt_execute($stmt_check_name);
+        $result_check_name = mysqli_stmt_get_result($stmt_check_name);
+    
+        if (mysqli_num_rows($result_check_name) > 0) {
+            $errors[] = "Duplicate Subject";
+        }
+        mysqli_stmt_close($stmt_check_name);
+    
+       
+        if (empty($errors)) {
+            $sql = "INSERT INTO subjects (subject_code, subject_name) VALUES (?, ?)";
+            $stmt = mysqli_prepare($conn, $sql);
+            if ($stmt) {
+                mysqli_stmt_bind_param($stmt, "ss", $subject_data['subject_code'], $subject_data['subject_name']);
+                $execute = mysqli_stmt_execute($stmt);
+    
+                mysqli_stmt_close($stmt);
+                mysqli_close($conn);
+    
+                return $execute ? true : ["Error adding subject to the database."];
+            } else {
+                $errors[] = "Error preparing statement: " . mysqli_error($conn);
+            }
+        }
+    
+        mysqli_close($conn);
+        return $errors;
+    }
+
+    function checkDuplicateSubjectData($subject_code) {
+        $conn = db_connect();
+        $query = "SELECT subject_code FROM subjects WHERE subject_code = ?";
+        $errors = [];
+    
+        if ($stmt = mysqli_prepare($conn, $query)) {
+            mysqli_stmt_bind_param($stmt, "s", $subject_code);
+            mysqli_stmt_execute($stmt);
+    
+            $result = mysqli_stmt_get_result($stmt);
+            if (mysqli_fetch_assoc($result)) {
+                $errors[] = "Duplicate Subject";
+            }
+    
+            mysqli_stmt_close($stmt);
+        } else {
+            $errors[] = "Error checking duplicate subject code";
+        }
+    
+        mysqli_close($conn);
+        return $errors;
+    }
+    
+
+
+    function getSubjectByCode($subject_code) {
+        $conn = db_connect();
+        $query = "SELECT * FROM subjects WHERE subject_code = ?";
+        $subject = null;
+    
+        if ($stmt = mysqli_prepare($conn, $query)) {
+            mysqli_stmt_bind_param($stmt, "s", $subject_code);
+            mysqli_stmt_execute($stmt);
+    
+            $result = mysqli_stmt_get_result($stmt);
+            $subject = mysqli_fetch_assoc($result);
+    
+            mysqli_stmt_close($stmt);
+        }
+    
+        mysqli_close($conn);
+        return $subject;
+    }
+    
 
 ?>
