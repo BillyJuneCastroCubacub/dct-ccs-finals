@@ -12,7 +12,7 @@ $errorMessages = [];
 
 if (isset($_GET['subject_code'])) {
     $subjectCode = sanitize_input($_GET['subject_code']);
-    $selectedSubject = fetchSubjectDetails($subjectCode);
+    $selectedSubject = getSubjectByCode($subjectCode);
 
     if (!$selectedSubject) {
         $errorMessages[] = "The subject does not exist.";
@@ -23,7 +23,7 @@ if (isset($_GET['subject_code'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['subject_code'])) {
     $subjectCode = sanitize_input($_POST['subject_code']);
 
-    if (removeSubject($subjectCode)) {
+    if (deleteSubjectByCode($subjectCode)) {
         header("Location: add.php");
         exit;
     } else {
