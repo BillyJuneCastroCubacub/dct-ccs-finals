@@ -1,100 +1,122 @@
-<?php 
+<?php
+session_start();
+$pageTitle = "Add New Subject";
+require_once('../../functions.php');
+include('../partials/header.php');
 
-    session_start();
-    require('../../functions.php');
-    include('../partials/header.php');
+// Initialize error messages
+$errorMessages = [];
 
-    $errors = [];
-    $subject_data = [];
-
-if (!isset($_SESSION['subject_data'])) {
-    $_SESSION['subject_data'] = [];
-}
-
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $subject_data = [
-        'subject_code' => $_POST['subject_code'],
-        'subject_name' => $_POST['subject_name']
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $newSubject = [
+        'subject_code' => sanitize_input($_POST['subject_code']),
+        'subject_name' => sanitize_input($_POST['subject_name']),
     ];
 
-    $errors = validateSubjectData($subject_data);
-
-    
-    foreach ($_SESSION['subject_data'] as $existingSubject) {
-        if ($existingSubject['subject_code'] === $subject_data['subject_code']) {
-            $errors[] = "Duplicate Subject";
-            break;
-        }
-        if ($existingSubject['subject_name'] === $subject_data['subject_name']) {
-            $errors[] = "Duplicate Subject";
-            break;
-        }
+    // Save subject data in session (for demonstration purposes)
+    if (!isset($_SESSION['subjects'])) {
+        $_SESSION['subjects'] = [];
     }
+    $_SESSION['subjects'][] = $newSubject;
 
-    if (empty($errors)) {
-        $_SESSION['subject_data'][] = $subject_data;
+    // Add subject to database
+    $addResult = addSubjectData($newSubject);
+
+    if ($addResult === true) {
         header("Location: add.php");
         exit;
+    } else {
+        $errorMessages = $addResult;
     }
 }
 
 ?>
 
-<div class="container-fluid">
+<div class="container">
     <div class="row">
-        <!-- Sidebar Section -->
         <?php include('../partials/side-bar.php'); ?>
-        <div class="col-lg-10 col-md-9">
-            <div class="container mt-5">
-                <h2>Add a New Subject</h2>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="../dashboard.php">Dashboard</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Add Subject</li>
-                    </ol>
-                </nav>
-                <hr>
-                <?php if (!empty($errors)): ?>
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <strong>System Errors</strong>
-                        <ul>
-                            <?php foreach ($errors as $error): ?>
-                                <li><?php echo htmlspecialchars($error); ?></li>
-                            <?php endforeach; ?>
-                        </ul>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                <?php endif; ?>
-                <form method="post">
-                    <div class="form-group">
-                        <label for="subject_code">Subject Code</label>
-                        <input type="text" class="form-control" id="subject_code" name="subject_code" placeholder="Enter Subject Code">
-                    </div>
-                    <div class="form-group mt-3">
-                        <label for="subject_name">Subject Name</label>
-                        <input type="text" class="form-control" id="subject_name" name="subject_name" placeholder="Enter Subject Name">
-                    </div>
-                    <button type="submit" class="btn btn-primary mt-3">Add Subject</button>
-                </form>
-                <hr>
 
-                <!-- Subject List -->
-                <h3 class="mt-5">Subject List</h3>
-                <table class="table table-striped">
-                    <thead class="thead-dark">
+        <div class="col-lg-10 col-md-9 mt-5">
+            <h2>Create a Subject</h2>
+            <nav aria-label="breadcrumb" class="my-3">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="../dashboard.php">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Subjects</li>
+                </ol>
+            </nav>
+            <hr>
+
+            <!-- Error Notifications -->
+            <?php if (!empty($errorMessages)): ?>
+                <div class="alert alert-danger">
+                    <strong>Errors Found:</strong>
+                    <ul>
+                        <?php foreach ($errorMessages as $message): ?>
+                            <li><?= htmlspecialchars($message); ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
+
+            <!-- Subject Form -->
+            <form method="post" class="mt-4">
+                <div class="form-group mb-3">
+                    <label for="subject_code">Subject Code</label>
+                    <input 
+                        type="text" 
+                        id="subject_code" 
+                        name="subject_code" 
+                        class="form-control" 
+                        placeholder="Enter subject code" 
+                        value="<?= isset($newSubject['subject_code']) ? htmlspecialchars($newSubject['subject_code']) : ''; ?>" 
+                        required>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="subject_name">Subject Name</label>
+                    <input 
+                        type="text" 
+                        id="subject_name" 
+                        name="subject_name" 
+                        class="form-control" 
+                        placeholder="Enter subject name" 
+                        value="<?= isset($newSubject['subject_name']) ? htmlspecialchars($newSubject['subject_name']) : ''; ?>" 
+                        required>
+                </div>
+                <button type="submit" class="btn btn-success">Add Subject</button>
+            </form>
+
+            <hr>
+            <h3 class="mt-5">Available Subjects</h3>
+            <table class="table table-bordered mt-3">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Subject Code</th>
+                        <th>Subject Name</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($allSubjects)): ?>
+                        <?php foreach ($allSubjects as $subject): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($subject['subject_code']); ?></td>
+                                <td><?= htmlspecialchars($subject['subject_name']); ?></td>
+                                <td>
+                                    <a href="edit.php?subject_code=<?= urlencode($subject['subject_code']); ?>" class="btn btn-primary btn-sm">Edit</a>
+                                    <a href="delete.php?subject_code=<?= urlencode($subject['subject_code']); ?>" class="btn btn-danger btn-sm">Delete</a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
                         <tr>
-                            <th>Subject Code</th>
-                            <th>Subject Name</th>
-                            <th>Options</th>
+                            <td colspan="3" class="text-center">No subjects have been added yet.</td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        
-                    </tbody>
-                </table>
-            </div>
+                    <?php endif; ?>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
-<?php include('partials/footer.php'); ?>
+<?php include('../partials/footer.php'); ?>
