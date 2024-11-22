@@ -72,6 +72,96 @@ function validateStudentData($student_data) {
     }
     return $errors;
 }
+function checkDuplicateStudentData($student_id) {
+    $conn = db_connect(); 
 
+    $sql = "SELECT student_id FROM students WHERE student_id = ?";
+    $stmt = mysqli_prepare($conn, $sql);
+    
+    if ($stmt) {
+       
+        mysqli_stmt_bind_param($stmt, "s", $student_id);
+        mysqli_stmt_execute($stmt);
+
+        $result = mysqli_stmt_get_result($stmt);
+        $existing_student = mysqli_fetch_assoc($result);
+
+        mysqli_stmt_close($stmt);
+        mysqli_close($conn);
+
+        
+        if ($existing_student) {
+            return ["Duplicate Student ID" . $existing_student];
+        }
+    } else {
+        mysqli_close($conn);
+        return ["Error checking duplicate student ID"];
+    }
+
+  
+    return [];
+}
+
+function addStudentData($student_id, $student_firstname, $student_lastname) {
+    $checkStudentData = validateStudentData([
+        'student_id' => $student_id,
+        'first_name' => $student_firstname,
+        'last_name' => $student_lastname,
+    ]);
+    $checkDuplicateData = checkDuplicateStudentData($student_id);
+
+    if (count($checkStudentData) > 0) {
+        echo displayErrors($checkStudentData);
+        return false;
+    }
+
+    if (count($checkDuplicateData) > 0) {
+        echo displayErrors($checkDuplicateData);
+        return false;
+    }
+
+    $conn = db_connect();
+
+
+    $sql_insert = "INSERT INTO students (student_id, first_name, last_name) VALUES (?, ?, ?)";
+    $stmt = mysqli_prepare($conn, $sql_insert);
+
+    if ($stmt) {
+        
+        mysqli_stmt_bind_param($stmt, "sss", $student_id, $student_firstname, $student_lastname);
+
+     
+        if (mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_close($stmt);
+            mysqli_close($conn);
+            return true;
+        } else {
+            echo "Error: " . mysqli_error($conn); 
+        }
+    } else {
+        echo "Error preparing statement: " . mysqli_error($conn);
+    }
+
+   
+    mysqli_close($conn);
+    return false;
+}
+function selectStudents() {
+    $conn = db_connect();
+
+    $sql_select = "SELECT * FROM students";
+    $result = mysqli_query($conn, $sql_select);
+
+    $students = [];
+    if ($result) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $students[] = $row;
+        }
+    }
+
+    mysqli_close($conn);
+
+    return $students;
+}
 
 ?>
