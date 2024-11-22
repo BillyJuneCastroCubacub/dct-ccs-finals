@@ -125,7 +125,7 @@ $availableSubjects = array_filter($allSubjects, function ($subject) use ($attach
                                 <td><?= htmlspecialchars($subject['subject_name']); ?></td>
                                 <td><?= htmlspecialchars($subject['grade']); ?></td>
                                 <td>
-                                    <a href="detach-subject.php?student_id=<?= urlencode($studentId) ?>&subject_code=<?= urlencode($subject['subject_code']) ?>" class="btn btn-danger btn-sm">Detach Subject</a>
+                                    <a href="dettach-subject.php?student_id=<?= urlencode($studentId) ?>&subject_code=<?= urlencode($subject['subject_code']) ?>" class="btn btn-danger btn-sm">Detach Subject</a>
                                     <a href="assign-grade.php?student_id=<?= urlencode($studentId) ?>&subject_code=<?= urlencode($subject['subject_code']) ?>" class="btn btn-success btn-sm">Assign Grade</a>
                                 </td>
                             </tr>

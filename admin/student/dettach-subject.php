@@ -3,6 +3,36 @@ session_start();
 $pageTitle = "Detach Subject from Student";
 include '../partials/header.php';
 include '../../functions.php';
+
+$studentToDelete = null;
+$subjectToDetach = null;
+
+
+if (isset($_GET['student_id']) && isset($_GET['subject_code'])) {
+    $student_id = $_GET['student_id'];
+    $subject_code = $_GET['subject_code'];
+
+    $studentToDelete = getSelectedStudentById($student_id);
+    $subjectToDetach = getSubjectByCode($subject_code);
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['student_id']) && isset($_POST['subject_code'])) {
+    $student_id = $_POST['student_id'];
+    $subject_code = $_POST['subject_code'];
+    
+    $subject = getSubjectByCode($subject_code);
+    if ($subject) {
+        $subject_id = $subject['id'];
+        if (detachSubjectFromStudent($student_id, $subject_id)) {
+            header("Location: attach-subject.php?student_id=" . urlencode($student_id));
+            exit;
+        } else {
+            $_SESSION['error_message'] = "Failed to detach the subject.";
+        }
+    } else {
+        $_SESSION['error_message'] = "Subject not found.";
+    }
+}
 ?>
 <div class="container">
     <div class="row">
