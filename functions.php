@@ -224,4 +224,24 @@ function fetchStudentById($student_id) {
         $sql = "UPDATE students SET first_name = ?, last_name = ? WHERE student_id = ?";
         return executeQuery($sql, [$studentData['first_name'], $studentData['last_name'], $studentData['student_id']]);
     }
+
+    function deleteSubjectByCode($subject_code) {
+        $conn = con(); 
+        $sql = "DELETE FROM subjects WHERE subject_code = ?";
+        $stmt = mysqli_prepare($conn, $sql);
+    
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "s", $subject_code);
+            $executionResult = mysqli_stmt_execute($stmt);
+            mysqli_stmt_close($stmt);
+            mysqli_close($conn);
+            return $executionResult;
+        } else {
+         
+            echo "Error preparing delete query: " . mysqli_error($conn);
+            mysqli_close($conn);
+            return false;
+        }
+    }
+
 ?>
