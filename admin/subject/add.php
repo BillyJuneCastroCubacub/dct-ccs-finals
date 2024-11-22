@@ -14,16 +14,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'subject_name' => sanitize_input($_POST['subject_name']),
     ];
 
-    // Save subject data in session (for demonstration purposes)
-    if (!isset($_SESSION['subjects'])) {
-        $_SESSION['subjects'] = [];
-    }
-    $_SESSION['subjects'][] = $newSubject;
-
     // Add subject to database
     $addResult = addSubjectData($newSubject);
 
     if ($addResult === true) {
+        // Redirect to avoid form resubmission
         header("Location: add.php");
         exit;
     } else {
@@ -31,6 +26,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Fetch all subjects from the database
+$conn = db_connect();
+$sql = "SELECT * FROM subjects";
+$result = mysqli_query($conn, $sql);
+$allSubjects = mysqli_fetch_all($result, MYSQLI_ASSOC);
+mysqli_close($conn);
 ?>
 
 <div class="container">
