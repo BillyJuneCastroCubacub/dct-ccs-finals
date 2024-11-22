@@ -164,4 +164,64 @@ function selectStudents() {
     return $students;
 }
 
+function getSelectedStudentById($student_id) {
+    $conn = db_connect();
+
+    try {
+        $sql = "SELECT * FROM students WHERE student_id = ?";
+        $stmt = mysqli_prepare($conn, $sql);
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "s", $student_id);
+            mysqli_stmt_execute($stmt);
+
+            $result = mysqli_stmt_get_result($stmt);
+
+            if ($result && mysqli_num_rows($result) > 0) {
+                $student = mysqli_fetch_assoc($result);
+                mysqli_stmt_close($stmt);
+                mysqli_close($conn);
+                return $student; 
+            } else {
+                mysqli_stmt_close($stmt);
+                mysqli_close($conn);
+                return null; 
+            }
+        }
+    } catch (Exception $e) {
+    }
+}
+
+function executeQuery($sql, $params, $isSelect = false) {
+    $conn = db_connect();
+    $stmt = mysqli_prepare($conn, $sql);
+
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, str_repeat("s", count($params)), ...$params);
+        mysqli_stmt_execute($stmt);
+
+        if ($isSelect) {
+            $result = mysqli_stmt_get_result($stmt);
+            $data = [];
+            while ($row = mysqli_fetch_assoc($result)) {
+                $data[] = $row;
+            }
+            mysqli_stmt_close($stmt);
+            mysqli_close($conn);
+            return $data;
+        }
+
+        mysqli_stmt_close($stmt);
+        mysqli_close($conn);
+        return true;
+    }
+}
+function fetchStudentById($student_id) {
+        $result = executeQuery("SELECT * FROM students WHERE student_id = ?", [$student_id], true);
+        return $result[0] ?? null;
+    }
+    
+    function updateStudentData($studentData) {
+        $sql = "UPDATE students SET first_name = ?, last_name = ? WHERE student_id = ?";
+        return executeQuery($sql, [$studentData['first_name'], $studentData['last_name'], $studentData['student_id']]);
+    }
 ?>
